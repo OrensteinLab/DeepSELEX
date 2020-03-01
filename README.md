@@ -1,7 +1,8 @@
 # DeepSELEX
 Inference of DNA-binding preferences from HT-SELEX data using deep neural networks
+
 The flags for the command line interface:
-    :parameter
+    :flags
 
       - `learning_file_list`: A list of HT-SELEX files. Should be written as follows:
         -lfl Alx4_TGGTAG20NCG_P_0.fastq Alx4_TGGTAG20NCG_P_1.fastq Alx4_TGGTAG20NCG_P_2.fastq Alx4_TGGTAG20NCG_P_3.fastq Alx4_TGGTAG20NCG_P_4.fastq
