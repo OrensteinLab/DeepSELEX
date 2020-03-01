@@ -60,7 +60,7 @@ class LearningFile(File):
             return pd.read_csv(self.address, sep="\t",
                         header=None,
                         nrows=self.num_lines,
-                        names=['DNA_Id', 'Occur_num'])
+                        names=['DNA_Id'])
         except FileNotFoundError:
             raise FileNotFoundError(f'check if the address: {self.address} contains the desired file')
 
