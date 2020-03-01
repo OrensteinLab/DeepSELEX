@@ -9,7 +9,7 @@ import prediction_module
 def read_user_switches_from_cmd():
     """returns the parser.parse_args() which cotains the cmd switches
     The user can add more switches if he desires
-    :parameter
+    :flags
 
       - `learning_file_list`: A list of HT-SELEX files. Should be written as follows:
         -lfl Alx4_TGGTAG20NCG_P_0.fastq Alx4_TGGTAG20NCG_P_1.fastq Alx4_TGGTAG20NCG_P_2.fastq Alx4_TGGTAG20NCG_P_3.fastq Alx4_TGGTAG20NCG_P_4.fastq
