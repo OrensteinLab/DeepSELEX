@@ -119,7 +119,7 @@ class Model:
         Adam = keras.optimizers.Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, decay=1e-5, amsgrad=False)
         self.model.compile(optimizer=Adam, loss='categorical_crossentropy')
 
-        self.model.fit(data.one_hot_data, data.enrichment_matrix, epochs=1,
+        self.model.fit(data.one_hot_data, data.enrichment_matrix, epochs=30,
                     batch_size=64, verbose=1, shuffle=True, validation_split=0.3,
                     callbacks=[keras.callbacks.ModelCheckpoint(self.model_path, monitor='val_loss', verbose=0, save_best_only=True,
                                                                save_weights_only=False, mode='auto', period=1),
