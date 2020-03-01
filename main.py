@@ -1,7 +1,5 @@
-import sys
 import gc
 
-sys.path.insert(1, '../git')
 import read_files
 import create_data
 import build_model
@@ -12,7 +10,7 @@ def read_user_switches_from_cmd():
     :flags
 
       - `learning_file_list`: A list of HT-SELEX files. Should be written as follows:
-        -lfl Alx4_TGGTAG20NCG_P_0.fastq Alx4_TGGTAG20NCG_P_1.fastq Alx4_TGGTAG20NCG_P_2.fastq Alx4_TGGTAG20NCG_P_3.fastq Alx4_TGGTAG20NCG_P_4.fastq
+        -lfl demo_data/Alx4_TGGTAG20NCG_P_0.fastq demo_data/Alx4_TGGTAG20NCG_P_1.fastq demo_data/Alx4_TGGTAG20NCG_P_2.fastq Alx4_TGGTAG20NCG_P_3.fastq demo_data/Alx4_TGGTAG20NCG_P_4.fastq
 
       - `primary_selex_sequence: the sequence which is the HT-SELEX experiment primary sequence.
         If the selex file is of the form: Alx4_TGGTAG20NCG_P_0.fastq, the primary sequence is: TGGTAG20NCG
@@ -38,7 +36,8 @@ def read_user_switches_from_cmd():
     :returns
      - `parser.parse_args()`: A argparse module contains all the switches the user entered
      """
-
+    file_list = ['demo_data/Alx4_TGGTAG20NCG_P_0.fastq', 'demo_data/Alx4_TGGTAG20NCG_P_1.fastq', 'demo_data/Alx4_TGGTAG20NCG_P_2.fastq', 'demo_data/Alx4_TGGTAG20NCG_P_3.fastq', 'demo_data/Alx4_TGGTAG20NCG_P_4.fastq']
+    file_pred = 'demo_data/Alx4_1744.1_deBruijn.txt'
     primary_selex_sequence = 'TGGTAG20NCG'
     saved_model_location = 'test_model.h5'
     results_location = 'demo_results.mmm'
