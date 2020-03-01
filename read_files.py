@@ -110,7 +110,7 @@ class PredictionFile(File):
         self.raw_data = self.read_data()
 
     def read_data(self):
-        """Read the file as csv file
+        """Read the file as csv file, the ending is irrelevant as long as it in the correct format
 
         Raises
         ------
