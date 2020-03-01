@@ -23,10 +23,6 @@ def read_user_switches_from_cmd():
         Should be written as follows:
         -pf Alx4_1744.1_deBruijn.txt or any other predicted file
 
-      - `pf: Prediction data file.
-        Should be written as follows:
-        -pf Alx4_1744.1_deBruijn.txt or any other predicted file
-
       - `ofl: The output file name and location.
         Should be written as follows:
         -ofl output_file_name.csv
