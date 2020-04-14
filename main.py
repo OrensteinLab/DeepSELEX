@@ -61,22 +61,24 @@ if __name__ == "__main__":
     1. Get the cmd switches by the function read_user_switches_from_cmd()
     2. Read the model files and store them in learning_files_list which is a list of LearningFile objects
     and prediction_file which is a PredictionFile object. this is done by read_files.model_files()
-    3. Transform the model files into appropriate one hot encode matrix. The learning files will be
+    3. Transform the training files into appropriate one hot encode matrix. The learning files will be
     added linker sequences.
     4. Delete the unnecessary files object and use the garbage collector
     5. Train the model or load and existing one
-    6. Predict the results (if the user supplied a prediction_file)"""
+    6. Transform the prediction file into appropriate one hot encode matrix.
+    7. Predict the results (if the user supplied a prediction_file)"""
 
     cmd_args = read_user_switches_from_cmd()  # 1.
 
     learning_files_list, prediction_file = read_files.model_files(cmd_args)  # 2.
 
-    train_data = create_data.train_data_constructor(learning_files_list)
-    learning_files_list = None
+    train_data = create_data.train_data_constructor(learning_files_list)  # 3.
+    learning_files_list = None  # 4.
+    gc.collect()
 
     model = build_model.manage_model(cmd_args, train_data)  # 5.
 
     prediction_data = create_data.prediction_data_constructor(prediction_file,
-                                                              model_input_size=model.layers[0].input_shape[1])  # 3.
+                                                              model_input_size=model.layers[0].input_shape[1])  # 6.
     if prediction_data:
-        prediction_module.predict_prediction_file(model=model, data=prediction_data, cmd_args=cmd_args)  # 6.
+        prediction_module.predict_prediction_file(model=model, data=prediction_data, cmd_args=cmd_args)  # 7.
