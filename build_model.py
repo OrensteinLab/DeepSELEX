@@ -1,7 +1,7 @@
-from numpy.random import seed
-seed(1)
-from tensorflow import set_random_seed
-set_random_seed(2)
+# from numpy.random import seed
+# seed(1)
+# from tensorflow import set_random_seed
+# set_random_seed(2)
 import numpy as np
 import keras
 from keras.layers import *
@@ -118,16 +118,36 @@ class Model:
         """
         Adam = keras.optimizers.Adam(lr=1e-3, beta_1=0.9, beta_2=0.999, decay=1e-5, amsgrad=False)
         self.model.compile(optimizer=Adam, loss='categorical_crossentropy')
+        datasets = 3
+        splitted_train_data, splitted_test_data = self.data_divider(data=data, datasets=datasets)
+        for i in range(datasets):
+            self.model.fit(splitted_train_data[i], splitted_test_data[i], epochs=30,
+                        batch_size=64, verbose=1, shuffle=True, validation_split=0.3,
+                        callbacks=[keras.callbacks.ModelCheckpoint(self.model_path, monitor='val_loss', verbose=0, save_best_only=True,
+                                                                   save_weights_only=False, mode='auto', period=1),
+                                   keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                                 min_delta=0,
+                                                                 patience=1,
+                                                                 verbose=0, mode='auto', restore_best_weights=True)
+                                   ])
 
-        self.model.fit(data.one_hot_data, data.enrichment_matrix, epochs=30,
-                    batch_size=64, verbose=1, shuffle=True, validation_split=0.3,
-                    callbacks=[keras.callbacks.ModelCheckpoint(self.model_path, monitor='val_loss', verbose=0, save_best_only=True,
-                                                               save_weights_only=False, mode='auto', period=1),
-                               keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                             min_delta=0,
-                                                             patience=1,
-                                                             verbose=0, mode='auto', restore_best_weights=True)
-                               ])
+    def data_divider(self, data, datasets=3):
+        """Divide the data set into 3 (datasets) independent sets
+        We found out this is the best way to train a model so it wont fit to the
+        HT-SELEX technological characteristics
 
-    def __del__(self):
-        print("deleted model object")
+        Parameters
+        ----------
+        data : TrainData
+            This is the data object which we will divide
+        datasets : int
+            This is the data object which we will divide
+        """
+        splitted_train_data = []
+        splitted_test_data = []
+        for i in range(0, datasets):
+            print('the ranges in {i} are: {low}, {high}'.format(i=i,low=round((i/datasets)*len(data.one_hot_data)),high=round(((i+1)/datasets) * len(data.one_hot_data))))
+            splitted_train_data.append(data.one_hot_data[round((i/datasets)*len(data.one_hot_data)):round(((i+1)/datasets) * len(data.one_hot_data)), :, :])
+            splitted_test_data.append(data.enrichment_matrix[round((i/datasets)*len(data.enrichment_matrix)):round(((i+1)/datasets) * len(data.enrichment_matrix))])
+
+        return splitted_train_data, splitted_test_data

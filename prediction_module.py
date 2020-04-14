@@ -14,10 +14,11 @@ def predict_prediction_file(model, data, cmd_args):
     if cmd_args.output_file_location:
         prediction = prediction_loop(model, data)
         max_last_4 = np.amax(prediction[-1], 1)
+        max_last_3 = np.amax(prediction[-2], 1)
         min_first_0 = np.amin(prediction[0], 1)
         df = pd.DataFrame()
 
-        df['Results'] = max_last_4 - min_first_0
+        df['Results'] = max_last_4 + max_last_3 - min_first_0
         try:
             df.to_csv(cmd_args.output_file_location, index=False, header=False)
         except FileNotFoundError:
@@ -25,7 +26,8 @@ def predict_prediction_file(model, data, cmd_args):
                                     ' to save the results doesnt exist on your machine')
 
     else:
-        print('The user did not supplied results location thus the program will end before calculating the results')
+        print('The user did not supplied results location thus the program will end before calculating the results\n'
+              'please use -ofl switch')
         return
 
 
@@ -43,7 +45,7 @@ def prediction_loop(model, data):
     """
 
     files_num = model.layers[-1].output_shape[1]
-    ht_str_len = data.selex_str_len
+    ht_str_len = model.layers[0].input_shape[1]
     matrix = []
     selex_files_num = model.layers[-1].output_shape[1]
     for i in range(0,files_num):

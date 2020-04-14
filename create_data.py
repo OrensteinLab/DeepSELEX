@@ -68,9 +68,16 @@ class TrainData:
         start_linker, end_linker = read_files.selex_linker_sequence(file_address='selex_linker_flie.xlsx',
                                                                     primary_selex_sequence=primary_selex_sequence)
 
+
         self.one_hot_data = np.array(
             list(map(functools.partial(self.one_hot_encoder, start_linker=start_linker,
                                        end_linker=end_linker), dna_data)))
+
+        if start_linker:
+            print(f'start linker is: {start_linker[-self.linker_sequence_length:]}'
+                  f' and the end linker is: {end_linker[:self.linker_sequence_length]}')
+        else:
+            self.one_hot_data = self.linker_quarter_padding(modified_matrix=self.one_hot_data)
 
     def set_enrichment_matrix(self, enrichment_data):
         """Create the enrichment matrix to suit as the model label.
@@ -96,13 +103,11 @@ class TrainData:
         **kwargs: dict
             contains the start and end linker sequences
         """
-
-        if 'start_linker' in kwargs and self.linker_sequence_length != 0:
+        if kwargs['start_linker'] is None:
+            start_linker = end_linker = "A" * self.linker_sequence_length
+        else:
             start_linker = kwargs['start_linker'][-self.linker_sequence_length:]
             end_linker = kwargs['end_linker'][:self.linker_sequence_length]
-
-        else:
-            start_linker = end_linker = "A" * self.linker_sequence_length
 
         # if the "ACGT"
         # won't be added it will be impossible to convert sequnces which miss one of the letters
@@ -111,6 +116,30 @@ class TrainData:
         data = list(DNA_string.translate(trantab))
         return to_categorical(data)[0:-4]  # returns the matrix without the "ACGT"
 
+    def linker_quarter_padding(self, modified_matrix):
+        """If the user did not supplied primary_selex_sequence please note that we added:
+        "A" * self.linker_sequence_length at the one_hot_encoder
+        This need to be replaced by 0.25
+        Here we just replace all the places where we putted A, which gave something like this:
+        1 1 0 0 1 0 1 1
+        0 0 1 0 0 0 0 0
+        0 0 0 1 0 0 0 0
+        0 0 0 0 0 1 0 0
+        to:
+        0.25 0.25 0 0 1 0 0.25 0.25
+        0.25 0.25 1 0 0 0 0.25 0.25
+        0.25 0.25 0 1 0 0 0.25 0.25
+        0.25 0.25 0 0 0 1 0.25 0.25
+
+        We repeat this process
+        Parameters
+        ----------
+        modified_matrix: np.array
+            This is the matrix we are going to convert
+        """
+        modified_matrix[:, 0:self.linker_sequence_length, :] = 0.25
+        modified_matrix[:, self.selex_str_len - self.linker_sequence_length:self.selex_str_len, :] = 0.25
+        return modified_matrix
 
 class PredictData:
     """
@@ -215,8 +244,8 @@ class PredictData:
         We repeat this process
         Parameters
         ----------
-        DNA_string: str
-            This is the DNA sequence. Sent one at a time
+        modified_matrix: np.array
+            This is the matrix we are going to convert
         """
         modified_matrix[:, 0:self.selex_predict_str_adaptor, :] = 0.25
         modified_matrix[:, self.selex_str_len - self.selex_predict_str_adaptor:self.selex_str_len, :] = 0.25
@@ -242,43 +271,36 @@ def train_data_constructor(learning_files_list):
     :returns
      - `train_data`: TrainData object which will be used in the training process"""
 
-    full_learning_data_frame = pd.concat(learning_files_list[i].raw_data for i in range(len(learning_files_list)))
-    full_learning_data_frame = full_learning_data_frame.sample(frac=1)
-    train_data = TrainData(selex_str_len=len(learning_files_list[0].raw_data['DNA_Id'].iloc[0]), selex_files_num=len(learning_files_list))
-    train_data.set_one_hot_matrix(dna_data=full_learning_data_frame['DNA_Id'],
-                                  primary_selex_sequence=learning_files_list[0].primary_selex_sequence)
-    train_data.set_enrichment_matrix(enrichment_data=np.asarray(full_learning_data_frame['cycle_matrix']))
+    if learning_files_list is None:
+        train_data = None
+    else:
+        full_learning_data_frame = pd.concat(learning_files_list[i].raw_data for i in range(len(learning_files_list)))
+        full_learning_data_frame = full_learning_data_frame.sample(frac=1)
+        train_data = TrainData(selex_str_len=len(learning_files_list[0].raw_data['DNA_Id'].iloc[0]), selex_files_num=len(learning_files_list))
+        train_data.set_one_hot_matrix(dna_data=full_learning_data_frame['DNA_Id'],
+                                      primary_selex_sequence=learning_files_list[0].primary_selex_sequence)
+        train_data.set_enrichment_matrix(enrichment_data=np.asarray(full_learning_data_frame['cycle_matrix']))
     return train_data
 
 
-def prediction_data_constructor(prediction_file, train_data):
+def prediction_data_constructor(prediction_file, model_input_size):
     """This function will construct PredictData object. In the first step it will just __init the
     class and afterwards add a OneHot matrix
     :parameter
      - `prediction_file`: PredictionFile object
-     - `train_data`: TrainData object which is necessery to build the PredictData class
+     - `model_input_size`: int DeepSELEX input model size needed for the prediction file shape
     :returns
      - `prediction_data`: PredictData object which will be used in the prediction process"""
-
-    prediction_data = PredictData(selex_str_len=train_data.selex_str_len, predict_str_len=len(prediction_file.raw_data['DNA_Id'].iloc[0]))
-    prediction_data.set_one_hot_matrix(dna_data=prediction_file.raw_data['DNA_Id'])
+    if prediction_file is None:
+        prediction_data = None
+    else:
+        prediction_data = PredictData(selex_str_len=model_input_size, predict_str_len=len(prediction_file.raw_data['DNA_Id'].iloc[0]))
+        prediction_data.set_one_hot_matrix(dna_data=prediction_file.raw_data['DNA_Id'])
     return prediction_data
 
 
-def data_constructor(learning_files_list, prediction_file):
-    """This function will construct two data Objects by calling train_data_constructor
-     and prediction_data_constructor. The Objects will the be used in the training and prediction
-      process appropriately
-    :parameter
-     - `learning_files_list`: A list of LearningFile objects
-     - `prediction_file`: PredictionFile object
-    :returns
-     - `train_data`: TrainData object which will be used in the training process
-     - `prediction_data`: PredictData object which will be used in the prediction process"""
 
-    train_data = train_data_constructor(learning_files_list)
-    prediction_data = prediction_data_constructor(prediction_file, train_data)
-    return train_data, prediction_data
+
 
 
 

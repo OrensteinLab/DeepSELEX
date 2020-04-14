@@ -110,7 +110,7 @@ class PredictionFile(File):
         self.raw_data = self.read_data()
 
     def read_data(self):
-        """Read the file as csv file, the ending is irrelevant as long as it in the correct format
+        """Read the file as csv file
 
         Raises
         ------
@@ -172,14 +172,16 @@ class LinkerFile(File):
         IndexError
             if the given primary_selex_sequence is incorrect and dosent exist in the excel
         """
-        try:
-            full_string = self.raw_data[self.raw_data['Name'] == self.primary_selex_sequence].iloc[0][
-            'Sequence']
-        except IndexError:
-            raise IndexError(f'The primary_selex_sequence: {self.primary_selex_sequence} as was inserted at the command line as -pss doesnt exist in the linker excel')
-        start_linker = full_string[:full_string.index('N')]
-        end_linker = full_string[full_string.rfind('N') + 1:]
-        print(f'start linker is: {start_linker} and end linker is: {end_linker}')
+        if self.primary_selex_sequence:
+            try:
+                full_string = self.raw_data[self.raw_data['Name'] == self.primary_selex_sequence].iloc[0][
+                'Sequence']
+                start_linker = full_string[:full_string.index('N')]
+                end_linker = full_string[full_string.rfind('N') + 1:]
+            except IndexError:
+                raise IndexError(f'The primary_selex_sequence: {self.primary_selex_sequence} as was inserted at the command line as -pss doesnt exist in the linker excel')
+        else:
+            start_linker = end_linker = None
         return start_linker, end_linker
 
 def selex_linker_sequence(file_address, primary_selex_sequence):
