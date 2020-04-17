@@ -11,7 +11,7 @@ def read_user_switches_from_cmd():
     :parameter
 
       - `learning_file_list`: A list of HT-SELEX files. Should be written as follows:
-        -lfl Alx4_TGGTAG20NCG_P_0.fastq Alx4_TGGTAG20NCG_P_1.fastq Alx4_TGGTAG20NCG_P_2.fastq Alx4_TGGTAG20NCG_P_3.fastq Alx4_TGGTAG20NCG_P_4.fastq
+        -lfl demo_data/Alx4_TGGTAG20NCG_P_0.fastq demo_data/Alx4_TGGTAG20NCG_P_1.fastq demo_data/Alx4_TGGTAG20NCG_P_2.fastq demo_data/Alx4_TGGTAG20NCG_P_3.fastq demo_data/Alx4_TGGTAG20NCG_P_4.fastq
 
       - `pss: the sequence which is the HT-SELEX experiment primary sequence.
         If the selex file is of the form: Alx4_TGGTAG20NCG_P_0.fastq, the primary sequence is: TGGTAG20NCG
@@ -20,11 +20,7 @@ def read_user_switches_from_cmd():
 
       - `pf: Prediction data file.
         Should be written as follows:
-        -pf Alx4_1744.1_deBruijn.txt or any other predicted file
-
-      - `pf: Prediction data file.
-        Should be written as follows:
-        -pf Alx4_1744.1_deBruijn.txt or any other predicted file
+        -pf demo_data/Alx4_1744.1_deBruijn.txt or any other predicted file
 
       - `ofl: The output file name and location.
         Should be written as follows:
