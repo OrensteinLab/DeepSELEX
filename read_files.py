@@ -45,7 +45,7 @@ class LearningFile(File):
     def __init__(self, file_address, primary_selex_sequence):
         super().__init__(file_address)
         self.primary_selex_sequence = primary_selex_sequence
-        self.num_lines = 10000
+        self.num_lines = 15000
         self.raw_data = self.read_data()
 
     def read_data(self):
@@ -139,7 +139,7 @@ class LinkerFile(File):
         the DataFrame as was readed from the given SELEX files, it will be added the appropriate cycle label
     primary_selex_sequence : str
         the sequence which is the HT-SELEX experiment primary sequence.
-        If the selex file is of the form: Alx4_TGGTAG20NCG_P_0.fastq, the primary sequence is: TGGTAG20NCG
+        If the selex file is of the form: ALX4_TGTGTC20NGA_W_0.fastq, the primary sequence is: TGTGTC20NGA
     Methods
     -------
     read_data()
@@ -191,7 +191,7 @@ def selex_linker_sequence(file_address, primary_selex_sequence):
     :parameter
       - `file_address`: The linker file address.
       - `primary_selex_sequence: the sequence which is the HT-SELEX experiment primary sequence.
-        If the selex file is of the form: Alx4_TGGTAG20NCG_P_0.fastq, the primary sequence is: TGGTAG20NCG
+        If the selex file is of the form: ALX4_TGTGTC20NGA_W_0.fastq, the primary sequence is: TGTGTC20NGA
         this sequence should be supplied in the cmd
     :returns
      - Returns both the start_linker and end_linker which are concatenated to the HT-SELEX sequences"""

@@ -62,7 +62,7 @@ class TrainData:
             This is the DNA sequences from the HT-SELEX experiment
         primary_selex_sequence : str
         the sequence which is the HT-SELEX experiment primary sequence.
-        If the selex file is of the form: Alx4_TGGTAG20NCG_P_0.fastq, the primary sequence is: TGGTAG20NCG
+        If the selex file is of the form: ALX4_TGTGTC20NGA_W_0.fastq, the primary sequence is: TGTGTC20NGA
         """
 
         start_linker, end_linker = read_files.selex_linker_sequence(file_address='selex_linker_flie.xlsx',
