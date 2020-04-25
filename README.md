@@ -17,16 +17,22 @@ The flags for the command line interface:
 
       - `ofl: The output file name and location.
         Should be written as follows:
-        -ofl output_file_name.csv
+        -ofl results.csv
 
       - `sml: If supply, saves the model in the supplied address.
         Should be written as follows:
-        -sml saved_model_name.h5
+        -sml output_model.h5
 
       - `lml: Loads the model from the supplied address
         Should be written as follows:
         -lml loaded_model_name.h5
+
+
 Training command line example:
-python deep_selex.py -lfl demo_data/ALX4_TGTGTC20NGA_W_0.fastq demo_data/ALX4_TGTGTC20NGA_W_1.fastq demo_data/ALX4_TGTGTC20NGA_W_2.fastq demo_data/ALX4_TGTGTC20NGA_W_3.fastq demo_data/ALX4_TGTGTC20NGA_W_4.fastq -pss TGTGTC20NGA -pf demo_data/Alx4_1744.1_deBruijn.txt -ofl output_file_name.csv -sml saved_model_name.h5
+python deep_selex.py -lfl demo_data/ALX4_TGTGTC20NGA_W_0.fastq demo_data/ALX4_TGTGTC20NGA_W_1.fastq demo_data/ALX4_TGTGTC20NGA_W_2.fastq demo_data/ALX4_TGTGTC20NGA_W_3.fastq demo_data/ALX4_TGTGTC20NGA_W_4.fastq -pss TGTGTC20NGA -sml output_model.h5
+
+Training and predicting command line example:
+python deep_selex.py -lfl demo_data/ALX4_TGTGTC20NGA_W_0.fastq demo_data/ALX4_TGTGTC20NGA_W_1.fastq demo_data/ALX4_TGTGTC20NGA_W_2.fastq demo_data/ALX4_TGTGTC20NGA_W_3.fastq demo_data/ALX4_TGTGTC20NGA_W_4.fastq -pss TGTGTC20NGA -pf demo_data/Alx4_1744.1_deBruijn.txt -ofl results.csv -sml output_model.h5
+
 Using pre-trained model command line example:
-python deep_selex.py -lml test_model.h5 -pf demo_data/Alx4_1744.1_deBruijn.txt -ofl delete_this.csv
+python deep_selex.py -lml test_model.h5 -pf demo_data/Alx4_1744.1_deBruijn.txt -ofl results.csv
