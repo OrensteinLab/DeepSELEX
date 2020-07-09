@@ -42,12 +42,19 @@ python deep_selex.py -lml test_model.h5 -pf demo_data/Alx4_1744.1_deBruijn.txt -
 
 
 Installation Requirements:
+
 Linux based operating system (the trained models at the "models" directory can sometime have errors under other operating systems)
+
 python interpreter > = 3.6
+
 python software packages:
+
 	numpy version 1.17.5
+
 	pandas version 0.25.3
+
 	tensorflow version 1.14.0
+
 	keras version 2.3.1
 	
 
