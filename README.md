@@ -38,11 +38,11 @@ Linux based operating system (the trained models at the "models" directory can s
 python interpreter > = 3.6
 
 python software packages:
-   xlrd >= 1.2.0
-	numpy >= 1.17.5
-	pandas >= 0.25.3
-	tensorflow version == 1.14.0
-	keras version == 2.3.1
+   xlrd >= 1.2.0\
+	numpy >= 1.17.5\
+	pandas >= 0.25.3\
+	tensorflow version == 1.14.0\
+	keras version == 2.3.1\
 
 	
 
