@@ -210,7 +210,7 @@ class PredictData:
         """
 
         if self.selex_predict_str_adaptor != 0:
-            string = "A" * self.selex_predict_str_adaptor + DNA_string + 'A' * self.selex_predict_str_adaptor
+            DNA_string = "A" * self.selex_predict_str_adaptor + DNA_string + 'A' * self.selex_predict_str_adaptor
 
         trantab = DNA_string.maketrans('ACGT', '0123')
         str_arr = ["" for x in range(self.num_of_str)]
