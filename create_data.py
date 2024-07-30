@@ -68,7 +68,6 @@ class TrainData:
         start_linker, end_linker = read_files.selex_linker_sequence(file_address='selex_linker_flie.xlsx',
                                                                     primary_selex_sequence=primary_selex_sequence)
 
-
         self.one_hot_data = np.array(
             list(map(functools.partial(self.one_hot_encoder, start_linker=start_linker,
                                        end_linker=end_linker), dna_data)))
@@ -78,6 +77,7 @@ class TrainData:
                   f' and the end linker is: {end_linker[:self.linker_sequence_length]}')
         else:
             self.one_hot_data = self.linker_quarter_padding(modified_matrix=self.one_hot_data)
+            print("====Inside create_data::self.one_hot_data:", self.one_hot_data.shape)
 
     def set_enrichment_matrix(self, enrichment_data):
         """Create the enrichment matrix to suit as the model label.
@@ -109,12 +109,11 @@ class TrainData:
             start_linker = kwargs['start_linker'][-self.linker_sequence_length:]
             end_linker = kwargs['end_linker'][:self.linker_sequence_length]
 
-        # if the "ACGT"
-        # won't be added it will be impossible to convert sequnces which miss one of the letters
-        DNA_string = start_linker + DNA_string + end_linker + "ACGT"
-        trantab = DNA_string.maketrans('ACGT', '0123')
+        # Add "ACGTN" to ensure all characters are represented
+        DNA_string = start_linker + DNA_string + end_linker + "ACGTN"
+        trantab = DNA_string.maketrans('ACGTN', '01234')
         data = list(DNA_string.translate(trantab))
-        return to_categorical(data)[0:-4]  # returns the matrix without the "ACGT"
+        return to_categorical(data, num_classes=5)[0:-5]  # returns the matrix without the "ACGTN"
 
     def linker_quarter_padding(self, modified_matrix):
         """If the user did not supplied primary_selex_sequence please note that we added:
@@ -195,7 +194,6 @@ class PredictData:
         if self.selex_predict_str_adaptor > 0:
             self.one_hot_data = self.set_redundant_linker_to_avergae(modified_matrix=self.one_hot_data)
 
-
     def one_hot_encoder(self, DNA_string):
         """Encode each sequence to OneHot matrix
         1. Add "A" in case we need to bridge prediction to HT-SELEX
@@ -212,20 +210,20 @@ class PredictData:
         if self.selex_predict_str_adaptor != 0:
             DNA_string = "A" * self.selex_predict_str_adaptor + DNA_string + 'A' * self.selex_predict_str_adaptor
 
-        trantab = DNA_string.maketrans('ACGT', '0123')
+        trantab = DNA_string.maketrans('ACGTN', '01234')
         str_arr = ["" for x in range(self.num_of_str)]
         for i in range(0, self.num_of_str):  ##each substring goes to different element array
             str_arr[i] = DNA_string[i: i + self.selex_str_len]
 
-        # if the "ACGT"
+        # if the "ACGTN"
         # won't be added it will be impossible to convert sequnces which miss one of the letters
-        str_arr[self.num_of_str - 1] = str_arr[self.num_of_str - 1] + "ACGT"
+        str_arr[self.num_of_str - 1] = str_arr[self.num_of_str - 1] + "ACGTN"
 
         final_str = list("")
         for i in range(0, self.num_of_str):
             final_str += list(str_arr[i].translate(trantab))
 
-        return to_categorical(final_str)[0:-4]  # returns the matrix without the "ACGT"
+        return to_categorical(final_str, num_classes=5)[0:-5]  # returns the matrix without the "ACGTN"
 
     def set_redundant_linker_to_avergae(self, modified_matrix):
         """If we need to bridge between the prediction file sequences to the HT-SELEX sequences
@@ -250,8 +248,6 @@ class PredictData:
         modified_matrix[:, 0:self.selex_predict_str_adaptor, :] = 0.25
         modified_matrix[:, self.selex_str_len - self.selex_predict_str_adaptor:self.selex_str_len, :] = 0.25
         return modified_matrix
-
-
 
 def train_data_constructor(learning_files_list):
     """This function will construct TrainData object.
@@ -282,7 +278,6 @@ def train_data_constructor(learning_files_list):
         train_data.set_enrichment_matrix(enrichment_data=np.asarray(full_learning_data_frame['cycle_matrix']))
     return train_data
 
-
 def prediction_data_constructor(prediction_file, model_input_size):
     """This function will construct PredictData object. In the first step it will just __init the
     class and afterwards add a OneHot matrix
@@ -297,10 +292,3 @@ def prediction_data_constructor(prediction_file, model_input_size):
         prediction_data = PredictData(selex_str_len=model_input_size, predict_str_len=len(prediction_file.raw_data['DNA_Id'].iloc[0]))
         prediction_data.set_one_hot_matrix(dna_data=prediction_file.raw_data['DNA_Id'])
     return prediction_data
-
-
-
-
-
-
-

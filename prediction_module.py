@@ -13,6 +13,9 @@ def predict_prediction_file(model, data, cmd_args):
 
     if cmd_args.output_file_location:
         prediction = prediction_loop(model, data)
+        print("========prediction:", np.array(prediction).shape)
+        transposed_pred = np.transpose(np.array(prediction), (1, 0, 2))
+        print("========prediction:", transposed_pred)
         max_last_4 = np.amax(prediction[-1], 1)
         max_last_3 = np.amax(prediction[-2], 1)
         min_first_0 = np.amin(prediction[0], 1)

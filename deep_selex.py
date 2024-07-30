@@ -1,80 +1,103 @@
-import sys
-import gc
-
+import numpy as np
+import pandas as pd
+from keras.utils import to_categorical
+import functools
 import read_files
-import create_data
-import build_model
-import prediction_module
-def read_user_switches_from_cmd():
-    """returns the parser.parse_args() which cotains the cmd switches
-    The user can add more switches if he desires
-    :parameter
 
-      - `learning_file_list`: A list of HT-SELEX files. Should be written as follows:
-        -lfl demo_data/ALX4_TGTGTC20NGA_W_0.fastq demo_data/ALX4_TGTGTC20NGA_W_1.fastq demo_data/ALX4_TGTGTC20NGA_W_2.fastq demo_data/ALX4_TGTGTC20NGA_W_3.fastq demo_data/ALX4_TGTGTC20NGA_W_4.fastq
+class TrainData:
+    def __init__(self, selex_str_len, selex_files_num):
+        self.linker_sequence_length = 4
+        self.selex_str_len = selex_str_len + 2 * self.linker_sequence_length
+        self.selex_files_num = selex_files_num
+        self.one_hot_data = np.array
+        self.enrichment_matrix = np.array
 
-      - `pss: the sequence which is the HT-SELEX experiment primary sequence.
-        If the selex file is of the form: ALX4_TGTGTC20NGA_W_0.fastq, the primary sequence is: TGTGTC20NGA
-        this sequence should be supplied in the cmd.  Should be written as follows:
-        -pss TGTGTC20NGA
+    def set_one_hot_matrix(self, dna_data, primary_selex_sequence):
+        start_linker, end_linker = read_files.selex_linker_sequence(file_address='selex_linker_flie.xlsx', primary_selex_sequence=primary_selex_sequence)
+        
+        self.one_hot_data = np.array(
+            list(map(functools.partial(self.one_hot_encoder, start_linker=start_linker, end_linker=end_linker), dna_data)),
+            dtype=object
+        )
 
-      - `pf: Prediction data file.
-        Should be written as follows:
-        -pf demo_data/Alx4_1744.1_deBruijn.txt or any other predicted file
+        if start_linker:
+            print(f'start linker is: {start_linker[-self.linker_sequence_length:]} and the end linker is: {end_linker[:self.linker_sequence_length]}')
+        else:
+            self.one_hot_data = self.linker_quarter_padding(modified_matrix=self.one_hot_data)
+            print("====Inside create_data::self.one_hot_data:", self.one_hot_data.shape)
 
-      - `ofl: The output file name and location.
-        Should be written as follows:
-        -ofl output_file_name.csv
+    def set_enrichment_matrix(self, enrichment_data):
+        self.enrichment_matrix = np.asarray([enrichment_data[k] for k in range(len(enrichment_data))])
 
-      - `sml: If supply, saves the model in the supplied address.
-        Should be written as follows:
-        -sml saved_model_name.h5
+    def one_hot_encoder(self, DNA_string, **kwargs):
+        if kwargs['start_linker'] is None:
+            start_linker = end_linker = "A" * self.linker_sequence_length
+        else:
+            start_linker = kwargs['start_linker'][-self.linker_sequence_length:]
+            end_linker = kwargs['end_linker'][:self.linker_sequence_length]
 
-      - `lml: Loads the model from the supplied address
-        Should be written as follows:
-        -lml loaded_model_name.h5
+        DNA_string = start_linker + DNA_string + end_linker + "ACGTN"
+        trantab = DNA_string.maketrans('ACGTN', '01234')
+        data = list(DNA_string.translate(trantab))
+        return to_categorical(data, num_classes=5)[0:-5]
 
-    :returns
-     - `parser.parse_args()`: A argparse module contains all the switches the user entered
-     """
+    def linker_quarter_padding(self, modified_matrix):
+        if len(modified_matrix.shape) == 3:
+            modified_matrix[:, 0:self.linker_sequence_length, :] = 0.25
+            modified_matrix[:, self.selex_str_len - self.linker_sequence_length:self.selex_str_len, :] = 0.25
+        return modified_matrix
 
-    import argparse
-    parser = argparse.ArgumentParser(description='DeepSELEX is a Deep-Learning model for learning High Throughtput SELEX data')
-    parser.add_argument('-lfl', '--learning_file_list', nargs='+', help='list of learning files, no comma needed', required=False, default=None)
-    parser.add_argument('-pss', '--primary_selex_sequence', type=str, metavar='', required=False, help='primary SELEX sequence of the selex experiment', default=None)
-    parser.add_argument('-pf', '--prediction_file', type=str, metavar='', required=False, help='Prediction data file', default=None)
-    parser.add_argument('-ofl', '--output_file_location', type=str, metavar='', required=False, help='The output file name and location', default=None)
-    parser.add_argument('-sml', '--saved_model_location', type=str, metavar='', required=False, help='Saves the model in the supplied address', default=None)
-    parser.add_argument('-lml', '--loaded_model_location', type=str, metavar='', required=False, help='Loads the model from the supplied address', default=None)
+class PredictData:
+    def __init__(self, selex_str_len, predict_str_len):
+        self.selex_str_len = selex_str_len
+        self.predict_str_len = predict_str_len
+        self.num_of_str = max(self.predict_str_len - self.selex_str_len - 1, 1)
+        self.selex_predict_str_adaptor = int(max((self.selex_str_len - self.predict_str_len) / 2, 0))
+        self.one_hot_data = None
 
-    return parser.parse_args()
+    def set_one_hot_matrix(self, dna_data):
+        self.one_hot_data = np.array(list(map(self.one_hot_encoder, dna_data)), dtype=object)
+        if self.selex_predict_str_adaptor > 0:
+            self.one_hot_data = self.set_redundant_linker_to_avergae(modified_matrix=self.one_hot_data)
 
+    def one_hot_encoder(self, DNA_string):
+        if self.selex_predict_str_adaptor != 0:
+            DNA_string = "A" * self.selex_predict_str_adaptor + DNA_string + 'A' * self.selex_predict_str_adaptor
 
-if __name__ == "__main__":
-    """
-    This is DeepSELEX main program, welcome!
-    The Design pattern of this DeepLearning program is as follows:
-    1. Get the cmd switches by the function read_user_switches_from_cmd()
-    2. Read the model files and store them in learning_files_list which is a list of LearningFile objects
-    and prediction_file which is a PredictionFile object. this is done by read_files.model_files()
-    3. Transform the training files into appropriate one hot encode matrix. The learning files will be
-    added linker sequences.
-    4. Delete the unnecessary files object and use the garbage collector
-    5. Train the model or load and existing one
-    6. Transform the prediction file into appropriate one hot encode matrix.
-    7. Predict the results (if the user supplied a prediction_file)"""
+        trantab = DNA_string.maketrans('ACGTN', '01234')
+        str_arr = ["" for x in range(self.num_of_str)]
+        for i in range(0, self.num_of_str):
+            str_arr[i] = DNA_string[i: i + self.selex_str_len]
 
-    cmd_args = read_user_switches_from_cmd()  # 1.
+        str_arr[self.num_of_str - 1] = str_arr[self.num_of_str - 1] + "ACGTN"
 
-    learning_files_list, prediction_file = read_files.model_files(cmd_args)  # 2.
+        final_str = list("")
+        for i in range(0, self.num_of_str):
+            final_str += list(str_arr[i].translate(trantab))
 
-    train_data = create_data.train_data_constructor(learning_files_list)  # 3.
-    learning_files_list = None  # 4.
-    gc.collect()
+        return to_categorical(final_str, num_classes=5)[0:-5]
 
-    model = build_model.manage_model(cmd_args, train_data)  # 5.
+    def set_redundant_linker_to_avergae(self, modified_matrix):
+        if len(modified_matrix.shape) == 3:
+            modified_matrix[:, 0:self.selex_predict_str_adaptor, :] = 0.25
+            modified_matrix[:, self.selex_str_len - self.selex_predict_str_adaptor:self.selex_str_len, :] = 0.25
+        return modified_matrix
 
-    prediction_data = create_data.prediction_data_constructor(prediction_file,
-                                                              model_input_size=model.layers[0].input_shape[1])  # 6.
-    if prediction_data:
-        prediction_module.predict_prediction_file(model=model, data=prediction_data, cmd_args=cmd_args)  # 7.
+def train_data_constructor(learning_files_list):
+    if learning_files_list is None:
+        train_data = None
+    else:
+        full_learning_data_frame = pd.concat(learning_files_list[i].raw_data for i in range(len(learning_files_list)))
+        full_learning_data_frame = full_learning_data_frame.sample(frac=1)
+        train_data = TrainData(selex_str_len=len(learning_files_list[0].raw_data['DNA_Id'].iloc[0]), selex_files_num=len(learning_files_list))
+        train_data.set_one_hot_matrix(dna_data=full_learning_data_frame['DNA_Id'], primary_selex_sequence=learning_files_list[0].primary_selex_sequence)
+        train_data.set_enrichment_matrix(enrichment_data=np.asarray(full_learning_data_frame['cycle_matrix']))
+    return train_data
+
+def prediction_data_constructor(prediction_file, model_input_size):
+    if prediction_file is None:
+        prediction_data = None
+    else:
+        prediction_data = PredictData(selex_str_len=model_input_size, predict_str_len=len(prediction_file.raw_data['DNA_Id'].iloc[0]))
+        prediction_data.set_one_hot_matrix(dna_data=prediction_file.raw_data['DNA_Id'])
+    return prediction_data
